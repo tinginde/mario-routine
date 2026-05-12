@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>馬力歐晚上任務！</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@700;900&display=swap');
+
+  :root {
+    --red: #e52222; --blue: #1a6bc9; --yellow: #ffd700;
+    --green: #3cb371; --sky: #5c94fc; --brown: #8b4513;
+    --coin: #f7c948; --white: #fff; --dark: #1a1a2e; --cloud: #f0f0f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--sky); font-family: 'Nunito', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+  .sky-bg { position: fixed; top:0;left:0;right:0;bottom:0; background: linear-gradient(180deg,#5c94fc 0%,#87ceeb 70%,#6cc417 70%,#3a8c1a 100%); z-index:0; }
+  .cloud { position:absolute; background:white; border-radius:50px; opacity:0.9; animation:floatCloud linear infinite; }
+  .cloud::before,.cloud::after { content:''; background:white; border-radius:50%; position:absolute; }
+  .cloud::before { width:60%;height:150%;top:-50%;left:15%; }
+  .cloud::after  { width:40%;height:120%;top:-40%;right:15%; }
+  @keyframes floatCloud { from{transform:translateX(-200px)} to{transform:translateX(110vw)} }
+
+  .ground { position:fixed;bottom:0;left:0;right:0;height:60px;background:repeating-linear-gradient(90deg,#c84b0c 0px,#c84b0c 48px,#a83c08 48px,#a83c08 50px);border-top:4px solid #8b2f00;z-index:1; }
+
+  .container { position:relative;z-index:2;max-width:480px;margin:0 auto;padding:20px 16px 100px; }
+
+  .header { text-align:center;padding:24px 0 12px; }
+  .title-box { background:var(--red);border:4px solid #8b0000;border-radius:12px;padding:12px 20px;display:inline-block;box-shadow:0 6px 0 #8b0000,4px 10px 0 rgba(0,0,0,0.3);transform:rotate(-1deg);margin-bottom:8px; }
+  .title { font-family:'Press Start 2P',monospace;font-size:13px;color:white;text-shadow:2px 2px 0 #8b0000;letter-spacing:1px;line-height:1.6; }
+  .subtitle { font-size:14px;color:var(--dark);font-weight:900;margin-top:6px;text-shadow:1px 1px 0 rgba(255,255,255,0.5); }
+
+  .score-bar { display:flex;justify-content:center;align-items:center;gap:10px;margin:10px 0 18px; }
+  .score-box { background:var(--dark);border:3px solid var(--yellow);border-radius:10px;padding:8px 16px;font-family:'Press Start 2P',monospace;font-size:11px;color:var(--yellow);box-shadow:0 4px 0 #000; }
+
+  .task-card { background:white;border:4px solid var(--dark);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 6px 0 var(--dark);cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;position:relative;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent; }
+  .task-card:active { transform:translateY(4px);box-shadow:0 2px 0 var(--dark); }
+  .task-card.done { background:#d4f5d4;border-color:var(--green);box-shadow:0 6px 0 var(--green); }
+  .task-card.done::after { content:'✓ CLEAR!';font-family:'Press Start 2P',monospace;font-size:10px;color:var(--green);position:absolute;top:10px;right:12px;animation:popIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275); }
+  @keyframes popIn { from{transform:scale(0) rotate(-10deg)} to{transform:scale(1) rotate(0deg)} }
+
+  .task-inner { display:flex;align-items:center;gap:14px; }
+  .pixel-check { width:44px;height:44px;border:4px solid var(--dark);border-radius:8px;background:var(--cloud);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px; }
+  .task-card.done .pixel-check { background:var(--green);border-color:#1a5c2a; }
+  .task-icon { font-size:28px;flex-shrink:0; }
+  .task-text { flex:1; }
+  .task-name { font-size:16px;font-weight:900;color:var(--dark);line-height:1.3; }
+  .task-hint { font-size:12px;color:#666;margin-top:3px;font-weight:700; }
+  .task-coins { font-family:'Press Start 2P',monospace;font-size:9px;color:var(--coin);background:var(--dark);padding:3px 7px;border-radius:6px;flex-shrink:0; }
+
+  .complete-btn { display:block;width:100%;background:var(--green);border:4px solid #1a5c2a;border-radius:14px;padding:18px;font-family:'Press Start 2P',monospace;font-size:13px;color:white;text-shadow:2px 2px 0 #1a5c2a;cursor:pointer;box-shadow:0 6px 0 #1a5c2a;margin-top:20px;transition:transform 0.1s,box-shadow 0.1s;text-align:center;letter-spacing:1px; }
+  .complete-btn:disabled { background:#aaa;border-color:#666;box-shadow:0 6px 0 #666;text-shadow:none;cursor:not-allowed; }
+  .complete-btn:not(:disabled):active { transform:translateY(4px);box-shadow:0 2px 0 #1a5c2a; }
+
+  .victory { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px; }
+  .victory.show { display:flex;animation:fadeIn 0.4s; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .victory-box { background:var(--sky);border:6px solid var(--yellow);border-radius:20px;padding:32px 28px;box-shadow:0 0 0 4px var(--dark),0 12px 0 var(--dark);max-width:360px;width:100%; }
+  .victory-title { font-family:'Press Start 2P',monospace;font-size:16px;color:var(--yellow);text-shadow:3px 3px 0 var(--dark);line-height:1.6;margin-bottom:16px; }
+  .victory-mario { font-size:72px;animation:jumpMario 0.5s ease-in-out infinite alternate; }
+  @keyframes jumpMario { from{transform:translateY(0)} to{transform:translateY(-16px)} }
+  .victory-msg { font-size:15px;font-weight:900;color:white;margin:12px 0 8px;line-height:1.5; }
+  .victory-coins { font-family:'Press Start 2P',monospace;font-size:14px;color:var(--coin);margin:8px 0 20px; }
+  .victory-btn { background:var(--red);border:4px solid #8b0000;border-radius:12px;padding:14px 28px;font-family:'Press Start 2P',monospace;font-size:11px;color:white;cursor:pointer;box-shadow:0 5px 0 #8b0000; }
+
+  .streak-section { background:var(--dark);border:4px solid var(--yellow);border-radius:14px;padding:14px 16px;margin-bottom:16px;color:white; }
+  .streak-title { font-family:'Press Start 2P',monospace;font-size:9px;color:var(--yellow);margin-bottom:10px; }
+  .streak-dots { display:flex;gap:8px;flex-wrap:wrap; }
+  .streak-dot { width:36px;height:36px;border-radius:8px;border:3px solid #444;background:#333;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:8px;color:#666; }
+  .streak-dot.filled { background:var(--yellow);border-color:#c8a000;color:var(--dark); }
+  .streak-dot.today { border-color:var(--red);animation:pulse 1s ease-in-out infinite alternate; }
+  @keyframes pulse { from{box-shadow:0 0 0 0 rgba(229,34,34,0.6)} to{box-shadow:0 0 0 6px rgba(229,34,34,0)} }
+
+  .coin-particle { position:fixed;font-size:24px;pointer-events:none;z-index:999;animation:coinFly 0.8s ease-out forwards; }
+  @keyframes coinFly { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-80px) scale(0.5);opacity:0} }
+
+  .reset-link { text-align:center;margin-top:10px;font-size:12px;color:rgba(255,255,255,0.6);cursor:pointer;text-decoration:underline;font-weight:700; }
+
+  .loading { text-align:center;padding:20px;font-family:'Press Start 2P',monospace;font-size:10px;color:white; }
+</style>
+</head>
+<body>
+<div class="sky-bg"></div>
+<div class="ground"></div>
+
+<div class="victory" id="victory">
+  <div class="victory-box">
+    <div class="victory-mario">🍄</div>
+    <div class="victory-title">STAGE<br>CLEAR!</div>
+    <div class="victory-msg">太棒了！你完成了<br>今天的晚間任務！</div>
+    <div class="victory-coins" id="victoryCoins">🪙 × 0</div>
+    <button class="victory-btn" onclick="closeVictory()">繼續冒險 ▶</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <div class="title-box">
+      <div class="title">🌙 晚間任務</div>
+      <div class="title">NIGHT QUEST</div>
+    </div>
+    <div class="subtitle">和馬力歐一起完成任務！</div>
+  </div>
+
+  <div class="score-bar">
+    <div class="score-box" id="scoreBox">🪙 ×<span id="coinCount">0</span></div>
+    <div class="score-box">⭐ 連續 <span id="streakCount">0</span> 天</div>
+  </div>
+
+  <div class="streak-section">
+    <div class="streak-title">📅 本週進度</div>
+    <div class="streak-dots" id="streakDots"><div class="loading">載入中...</div></div>
+  </div>
+
+  <div id="tasksContainer"><div class="loading">載入中...</div></div>
+
+  <button class="complete-btn" id="completeBtn" onclick="completeAll()" disabled>
+    🏁 全部完成！
+  </button>
+  <div class="reset-link" onclick="resetDay()">重新開始今天的任務</div>
+</div>
+
+<script>
+const TASKS = [
+  { id: 'bag',      icon: '🎒', name: '整理書包',       hint: '明天要用的課本、作業都放好！', coins: 3 },
+  { id: 'clothes',  icon: '👕', name: '拿好明天的衣服', hint: '放在床邊，明天起床快又快！',   coins: 3 },
+  { id: 'pencil',   icon: '✏️', name: '文具補充',       hint: '鉛筆削好、橡皮擦準備好',       coins: 2 },
+  { id: 'drink',    icon: '💧', name: '裝好水壺',       hint: '記得喝水，馬力歐也要補血！',   coins: 2 },
+  { id: 'homework', icon: '📓', name: '確認作業都寫完', hint: '全部確認打勾才算！',             coins: 5 },
+];
+
+const DAYS = ['日','一','二','三','四','五','六'];
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function weekStartStr() {
+  const d = new Date();
+  const dow = d.getDay();
+  d.setDate(d.getDate() - dow);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+let state = { tasks_done: [], coins: 0, completed: false };
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  return res.json();
+}
+
+async function loadToday() {
+  const data = await api('GET', `/api/checkin?date=${todayStr()}`);
+  state = {
+    tasks_done: data.tasks_done || [],
+    coins: data.coins || 0,
+    completed: data.completed || false
+  };
+}
+
+async function saveState() {
+  await api('PUT', '/api/checkin', {
+    date: todayStr(),
+    tasks_done: state.tasks_done,
+    coins: countCoins(),
+    completed: state.completed
+  });
+}
+
+async function loadStreak() {
+  const data = await api('GET', '/api/streak');
+  document.getElementById('streakCount').textContent = data.streak || 0;
+}
+
+async function loadWeek() {
+  const data = await api('GET', `/api/checkins/week?start=${weekStartStr()}`);
+  const container = document.getElementById('streakDots');
+  container.innerHTML = '';
+  const today = new Date();
+  const dow = today.getDay();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - dow);
+
+  // Build a map of date -> completed
+  const map = {};
+  (data || []).forEach(row => {
+    const d = new Date(row.date);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    map[key] = row.completed;
+  });
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const isToday = i === dow;
+    const filled = map[key];
+
+    const dot = document.createElement('div');
+    dot.className = 'streak-dot' + (filled ? ' filled' : '') + (isToday ? ' today' : '');
+    dot.textContent = filled ? '⭐' : DAYS[i];
+    container.appendChild(dot);
+  }
+}
+
+function countCoins() {
+  return state.tasks_done.reduce((sum, id) => {
+    const t = TASKS.find(t => t.id === id);
+    return sum + (t ? t.coins : 0);
+  }, 0);
+}
+
+function renderTasks() {
+  const container = document.getElementById('tasksContainer');
+  container.innerHTML = '';
+  TASKS.forEach(task => {
+    const isDone = state.tasks_done.includes(task.id);
+    const card = document.createElement('div');
+    card.className = 'task-card' + (isDone ? ' done' : '');
+    card.id = 'task_' + task.id;
+    card.onclick = () => toggleTask(task.id);
+    card.innerHTML = `
+      <div class="task-inner">
+        <div class="pixel-check">${isDone ? '⭐' : ''}</div>
+        <div class="task-icon">${task.icon}</div>
+        <div class="task-text">
+          <div class="task-name">${task.name}</div>
+          <div class="task-hint">${task.hint}</div>
+        </div>
+        <div class="task-coins">🪙×${task.coins}</div>
+      </div>`;
+    container.appendChild(card);
+  });
+  updateUI();
+}
+
+async function toggleTask(id) {
+  if (state.completed) return;
+  const idx = state.tasks_done.indexOf(id);
+  if (idx === -1) { state.tasks_done.push(id); spawnCoins(id); }
+  else state.tasks_done.splice(idx, 1);
+  renderTasks();
+  await saveState();
+}
+
+function spawnCoins(taskId) {
+  const card = document.getElementById('task_' + taskId);
+  if (!card) return;
+  const rect = card.getBoundingClientRect();
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'coin-particle';
+      el.textContent = '🪙';
+      el.style.left = (rect.left + rect.width/2 + (Math.random()-0.5)*60) + 'px';
+      el.style.top = (rect.top + rect.height/2) + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 900);
+    }, i * 100);
+  }
+}
+
+function updateUI() {
+  const allDone = state.tasks_done.length === TASKS.length;
+  document.getElementById('coinCount').textContent = countCoins();
+  const btn = document.getElementById('completeBtn');
+  btn.disabled = !allDone || state.completed;
+  if (state.completed) btn.textContent = '✅ 今天任務完成！';
+}
+
+async function completeAll() {
+  state.completed = true;
+  await saveState();
+  document.getElementById('victoryCoins').textContent = '🪙 × ' + countCoins();
+  document.getElementById('victory').classList.add('show');
+  updateUI();
+  await loadWeek();
+  await loadStreak();
+}
+
+function closeVictory() {
+  document.getElementById('victory').classList.remove('show');
+}
+
+async function resetDay() {
+  if (!confirm('重新開始今天的任務？')) return;
+  state = { tasks_done: [], coins: 0, completed: false };
+  await saveState();
+  renderTasks();
+  await loadWeek();
+}
+
+// Clouds
+function makeClouds() {
+  const sky = document.querySelector('.sky-bg');
+  [8,25,45,68,85].forEach((top, i) => {
+    const c = document.createElement('div');
+    c.className = 'cloud';
+    const w = 80 + Math.random() * 80;
+    c.style.cssText = `width:${w}px;height:${w*0.4}px;top:${top}%;left:-200px;animation-duration:${18+i*7}s;animation-delay:-${i*4}s;`;
+    sky.appendChild(c);
+  });
+}
+
+// Init
+async function init() {
+  makeClouds();
+  await loadToday();
+  renderTasks();
+  await loadWeek();
+  await loadStreak();
+}
+
+init();
+</script>
+</body>
+</html>
